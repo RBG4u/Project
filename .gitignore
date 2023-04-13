@@ -2,3 +2,7 @@ config.py
 env/
 backup/
 __pycache__/
+*.gz
+*.bin
+*.ipynb
+fastText
