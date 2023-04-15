@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Анализ тональности</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Анализатор тональности</h1>
+
+    <h2>Выберите группу:</h2>
+    <h3> 1. Лентач</h3>
+    <h3> 2. Фишмарт</h3>
+
+    <form id="number-form">
+        <label for="number-input">Номер группы:</label>
+        <input type="number" id="number-input" name="name" required>
+        <button type="submit" id="submit-button">Анализировать</button>
+    </form>
+
+    <div id="result"></div>
+
+    <h2>Анализ текста</h2>
+
+    <form id="text-form">
+        <label for="text-input">Введите текст:</label>
+        <input type="text" id="text-input" name="name2" required>
+        <button type="submit" id="submit-button">Анализировать</button>
+    </form>
+
+    <div id="text-result"></div>
+
+    <script>
+        const numberForm = $('#number-form');
+        const textForm = $('#text-form');
+        const resultDiv = $('#result');
+        const textResultDiv = $('#text-result');
+
+        numberForm.on('submit', async (event) => {
+            event.preventDefault();
+
+            const formData = new FormData(numberForm[0]);
+
+            const response = await fetch('/analyze', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            resultDiv.html(`
+                <p>Общее количество комментариев: ${data.comments_count}</p>
+                <p>Количество положительных комментариев: ${data.positive_count}</p>
+                <p>Количество отрицательных комментариев: ${data.negative_count}</p>
+                <p>Процент положительных комментариев: ${data.positive_percentage.toFixed(2)}%</p>
+                <p>Процент отрицательных комментариев: ${data.negative_percentage.toFixed(2)}%</p>
+            `);
+        });
+
+        textForm.on('submit', async (event) => {
+            event.preventDefault();
+
+            const formData = new FormData(textForm[0]);
+
+            const response = await fetch('/analyze_text', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            textResultDiv.html(`Результат: ${data.result}`);
+        });
+    </script>
+</body>
+</html>

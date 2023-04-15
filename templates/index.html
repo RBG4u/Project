@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Анализатор настроения</title>
+</head>
+<body>
+    <h1>Выберите номер группы:</h1>
+    <h2> 1. Лентач</h2>
+    <h2> 2. Фишмарт</h2>
+    <form method="post" action="/analyze">
+        <input type="number" name="name" required>
+        <button type="submit">Анализировать</button>
+    </form>
+    <div id="results"></div>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('form').submit(function(event) {
+                event.preventDefault();
+                $.ajax({
+                    type: 'POST',
+                    url: '/analyze',
+                    data: $(this).serialize(),
+                    success: function(response) {
+                        $('#results').html(
+                            '<p>Количество комментариев: ' + response.comments_count + '</p>' +
+                            '<p>Положительных комментариев: ' + response.positive_count + '</p>' +
+                            '<p>Отрицательных комментариев: ' + response.negative_count + '</p>' +
+                            '<p>Процент положительных комментариев: ' + response.positive_percentage.toFixed(2) + '%</p>' +
+                            '<p>Процент отрицательных комментариев: ' + response.negative_percentage.toFixed(2) + '%</p>'
+                        );
+                    },
+                    error: function(response) {
+                        alert('Произошла ошибка: ' + response.responseText);
+                    }
+                });
+            });
+        });
+    </script>
+    <h2>Введите текст комментария для анализа:</h2>
+    <form id="text-form">
+      <label for="text-input">Введите текст:</label>
+      <input type="text" id="text-input" name="name2" required>
+      <button type="submit" id="submit-button">Анализировать</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+      const form = $('#text-form');
+      const resultDiv = $('#result');
+
+      form.on('submit', async (event) => {
+          event.preventDefault();
+
+          const formData = new FormData(form[0]);
+
+          const response = await fetch('/analyze_text', {
+              method: 'POST',
+              body: formData
+          });
+
+          const data = await response.json();
+
+          resultDiv.html(`Результат: ${data.predict}`);
+      });
+  </script>
+</body>
+</html>

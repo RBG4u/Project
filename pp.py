@@ -1,11 +1,13 @@
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem.snowball import RussianStemmer
-import pymystem3
+from pymystem3 import Mystem
 import re
 from querying_comment import query_comment
 from model import app
 from multiprocessing import Pool
+from joblib import Parallel, delayed
+from tqdm import tqdm
 
 
 def querying(id_group):
@@ -15,27 +17,45 @@ def querying(id_group):
         text = comment['text']
         if text == '':
             continue
-        preprocessed_comment = preprocessing(text)
+        preprocessed_comment = ''.join(preprocessing(text))
         if preprocessed_comment == []:
             continue
         preprocessed_comments_text.append(preprocessed_comment)
-    return preprocessed_comments_text
+    lemm_text = join(preprocessed_comments_text)
+    return lemm_text
 
 
 def preprocessing(comment):
-    preprocessed_comment_text = []
+    regular_comment_text = []
     text = remove_url(comment)
     text = remove_tags(text)
     text = remove_username(text)
     text = remove_id(text)
     text = remove_punct_numbers(text)
     text = lowercase_text(text)
-    tokens = tokenize_words(text)
-    tokens = remove_stopwords(tokens)
-    tokens = tokens_stemmer(tokens)
-    tokens = removing_short_tokens(tokens)
-    if tokens != []:
-        preprocessed_comment_text.extend(tokens)
+    #text = tokens_lemmatize(text)
+    #tokens = tokenize_words(text)
+    #tokens = remove_stopwords(tokens)
+    #tokens = tokens_lemmatize_2(tokens)
+    #tokens = tokens_stemmer(tokens)
+    #tokens = removing_short_tokens(tokens)
+    if text != '':
+        regular_comment_text.extend(text)
+    return regular_comment_text
+
+
+def join(text):
+    text_string = '. '.join(text)
+    preprocessed_comment_text = []
+    lemmatizer = Mystem()
+    lemmatized_string = Parallel(n_jobs=-1)(delayed(tokens_lemmatize)(t, lemmatizer) for t in tqdm(text_string))
+    lemmatized_sentences = lemmatized_string.split('.')
+    for sentence in lemmatized_sentences:
+        tokens = tokenize_words(sentence)
+        tokens = remove_stopwords(tokens)
+        tokens = removing_short_tokens(tokens)
+        if tokens != []:
+            preprocessed_comment_text.extend(tokens)
     return preprocessed_comment_text
 
 
@@ -80,9 +100,9 @@ def remove_stopwords(tokens):
     return tokens
 
 
-def tokens_lemmatize(tokens):
-    lemmatizer = pymystem3.Mystem(entire_input=False)
-    tokens = [lemmatizer.lemmatize(token)[0] for token in tokens]
+def tokens_lemmatize(tokens, lemmatizer):
+    #lemmatizer = Mystem()
+    tokens = [lemmatizer.lemmatize(tokens)]
     return tokens
 
 
